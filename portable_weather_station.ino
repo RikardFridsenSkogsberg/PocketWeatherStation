@@ -4,15 +4,10 @@
  *      repo:  
  *
  **************************************************************************************************
-
- The sketch displays a menu on the oled and when an item is selected it sets a
- flag and waits until the event is acted upon.  Max menu items on a 128x64 oled
- is four.
-
+ The sketch...
  **************************************************************************************************/
 
 
-// Weather station
 #include <Wire.h>
 #include <Adafruit_AHTX0.h>
 #include <Adafruit_GFX.h>
