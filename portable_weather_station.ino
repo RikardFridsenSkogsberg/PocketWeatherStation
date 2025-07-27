@@ -17,9 +17,16 @@
 #define SCREEN_HEIGHT 32 // OLED display height in pixels
 #define OLED_RESET -1
 #define SCREEN_ADDRESS 0x3C
+#define TOUCH_PIN 2
 
 Adafruit_AHTX0 aht; // The temperature AHT10 sensor object
 Adafruit_SSD1306 oled(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+
+volatile uint32_t time_last_pressed;
+uint32_t time_millis;
+uint32_t lastRefresh = 0;
+const uint32_t refreshInterval = 2000;  // only redraw every 2 seconds
+
 
 void updateDisplay(float temperature, float humidity){
   oled.clearDisplay();
@@ -32,6 +39,10 @@ void updateDisplay(float temperature, float humidity){
   oled.print(humidity);
   oled.println(" %");
   oled.display();
+}
+
+void IRAM_ATTR isr() {
+  time_last_pressed = millis();
 }
 
 void setup() {
@@ -56,23 +67,35 @@ void setup() {
     }
   }
 
+  //Setup the touch button
+  pinMode(TOUCH_PIN, INPUT);
+  attachInterrupt(TOUCH_PIN, isr, RISING); // Interupt for the touch button
 }
 
 void loop() {
-  // Read temperature and humidity from the sensor
-  sensors_event_t humidity, temp;
-  aht.getEvent(&humidity, &temp); // Populate the event objects
+  time_millis = millis();
+  if (time_millis - time_last_pressed < 8000){
+    // Read temperature and humidity from the sensor
+    sensors_event_t humidity, temp;
+    aht.getEvent(&humidity, &temp); // Populate the event objects
+    // Print temperature and humidity to Serial Monitor
+    Serial.print("Temperature: ");
+    Serial.print(temp.temperature);
+    Serial.println(" °C");
+    Serial.print("Humidity: ");
+    Serial.print(humidity.relative_humidity);
+    Serial.println(" %");
+
+    if (time_millis - lastRefresh > refreshInterval){
+      updateDisplay(temp.temperature, humidity.relative_humidity);
+      lastRefresh = millis();
+    }  
+  }
+  else{
+    oled.clearDisplay();
+    oled.display();
+  }
   
-  // Print temperature and humidity to Serial Monitor
-  Serial.print("Temperature: ");
-  Serial.print(temp.temperature);
-  Serial.println(" °C");
-
-  Serial.print("Humidity: ");
-  Serial.print(humidity.relative_humidity);
-  Serial.println(" %");
-
-  updateDisplay(temp.temperature, humidity.relative_humidity);
   // Delay between readings
-  delay(2000); 
+  delay(300); 
 }
