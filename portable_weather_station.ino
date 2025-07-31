@@ -1,12 +1,11 @@
 /**************************************************************************************************
  *
- *      Small portable weather station based on the ESP32-C3 Supermini - 22 July 2025
- *      repo:  
+ *      Small portable weather station based on the ESP32-C3 Supermini - 28 July 2025
+ *      repo: https://github.com/RikardFridsenSkogsberg/PocketWeatherStation   
  *
  **************************************************************************************************
  The sketch...
  **************************************************************************************************/
-
 
 #include <Wire.h>
 #include <Adafruit_AHTX0.h>
@@ -26,7 +25,7 @@ volatile uint32_t time_last_pressed;
 uint32_t time_millis;
 uint32_t lastRefresh = 0;
 const uint32_t refreshInterval = 2000;  // only redraw every 2 seconds
-
+const uint32_t keepAliveTime = 8000;
 
 void updateDisplay(float temperature, float humidity){
   oled.clearDisplay();
@@ -50,34 +49,29 @@ void setup() {
   Serial.begin(115200);
 
   // Setup the temp sensor
-  Serial.println("Trying AHT10 Sensor");
   if (!aht.begin()) {
     Serial.println("Failed to find sensor!");
-    while(1){
-      delay(1000);
-    }
+    while(1){delay(1000);}
   }
-  Serial.println("Found sensor!");
 
   // Setup the OLED screen
   if (!oled.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
     Serial.println("Failed to find screen");
-    while(1){
-      delay(1000);
-    }
+    while(1){delay(1000);}
   }
 
   //Setup the touch button
   pinMode(TOUCH_PIN, INPUT);
-  attachInterrupt(TOUCH_PIN, isr, RISING); // Interupt for the touch button
+  attachInterrupt(TOUCH_PIN, isr, RISING); // Interrupt for the touch button
 }
 
 void loop() {
   time_millis = millis();
-  if (time_millis - time_last_pressed < 8000){
+  if (time_millis - time_last_pressed < keepAliveTime){
     // Read temperature and humidity from the sensor
     sensors_event_t humidity, temp;
     aht.getEvent(&humidity, &temp); // Populate the event objects
+    
     // Print temperature and humidity to Serial Monitor
     Serial.print("Temperature: ");
     Serial.print(temp.temperature);

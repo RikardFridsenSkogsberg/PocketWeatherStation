@@ -31,7 +31,7 @@ This is a simple portable, pocket-size weather station. The idea of this isnt fo
 **TTP223 Touch Sensor**
 | AHT10 Pin | ESP32-C3 GPIO |
 | --- | --- |
-| VCC | 3v3|
+| VCC | 3V3|
 | GND | GND |
 | I/O | GPIO2 |
 
